@@ -1,0 +1,144 @@
+<!-- https://www.dashingd3js.com -->
+<!DOCTYPE html>
+ <html>
+   <head>
+     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.12.0/d3.min.js"></script>
+   </head>
+   <body>
+   </body>
+ <script>
+// resume: https://www.dashingd3js.com/dynamic-svg-coordinate-space
+
+     // 1. Basic chaining
+
+     // hardcoded
+    d3.select("body") // select gets an array, of length 1 in this case
+        .append("svg")
+            .attr("width", 50)
+            .attr("height", 50)
+        .append("circle")
+            .attr("cx", 25)
+            .attr("cy", 25)
+            .attr("r", 25)
+            .style("fill", "purple");
+    // with variables
+    let bodySelection = d3.select("body");
+
+    let svgSelection = 
+        bodySelection.append("svg")
+            .attr("width", 50)
+            .attr("height", 50);
+
+    let circleSelection = 
+        svgSelection.append("circle")
+            .attr("cx", 25)
+            .attr("cy", 25)
+            .attr("r", 25)
+            .style("fill", "red");
+    
+    // 2. With data
+    let theData = [1, 2, 3];
+    let p = d3.select("body").selectAll("p") // bind data to nonexistent p tags, that you create in a forEach kind of way after .envter
+        .data(theData)
+        .enter() //enter creates placeholders for non-existent data. .update selection gets existing dom points
+        .append("p")
+            .text(function(d, i){ return i + ": " + d; });
+    
+    // 3. SVG with data
+    let circleRadii = [40, 20, 10];
+    let bodySelection2 = d3.select("body");
+    let svgContainer2 = bodySelection2.append("svg")
+        .attr("width", 200)
+        .attr("height", 200)
+        .style("border", "1px solid black");
+    let circles = svgContainer2.selectAll("circle")
+        .data(circleRadii)
+        .enter()
+        .append("circle")
+            .attr("cx", 50)
+            .attr("cy", 50)
+            .attr("r", function(d){ return d})
+            .style("fill", function(d){ 
+                if(d === 10){
+                    return "blue";
+                }
+                if(d === 20){
+                    return "green";
+                }
+                else{
+                    return "yellow";
+                }
+            });
+    
+    // 4. SVG coordinate space
+    let spaceCircles = [30, 70, 110];
+    let svgContainer3 = d3.select("body")
+        .append("svg")
+        .attr("width", 200)
+        .attr("height", 200)
+        .style("border", "1px solid black");
+    let circles2 = svgContainer3.selectAll("circle")
+        .data(spaceCircles)
+        .enter()
+        .append("circle");
+    let circles2Attributes = circles2
+        .attr("cx", function(d){ return d; })
+        .attr("cy", function(d){ return d; })
+        .attr("r", 20)
+        .style("fill", "green");
+    
+    // 5. JSON
+    let jsonCircles = [
+        {
+            "x_axis": 30,
+            "y_axis": 30,
+            "radius": 20,
+            "color" : "green"
+        },
+        {
+            "x_axis": 70,
+            "y_axis": 70,
+            "radius": 20,
+            "color" : "purple"
+        },
+        {
+            "x_axis": 110,
+            "y_axis": 100,
+            "radius": 20,
+            "color" : "red"
+        }
+    ];
+    let svgContainer4 = d3.select("body").append("svg")
+        .attr("height", 200).attr("width", 200);
+    let circles3 = svgContainer4.selectAll("circle")
+        .data(jsonCircles)
+        .enter()
+        .append("circle");
+    let circles3Attributes = circles3
+        .attr("cx", function(d){ return d.x_axis})
+        .attr("cy", function(d){ return d.y_axis})
+        .attr("r", function(d){ return d.radius})
+        .style("fill", function(d){ return d.color});
+
+    // 6. SVG draw paths
+    let lineData = [ { "x": 1,   "y": 5},  { "x": 20,  "y": 20},
+        { "x": 40,  "y": 10}, { "x": 60,  "y": 40},
+        { "x": 80,  "y": 5},  { "x": 100, "y": 60}];
+
+    let lineFunction = d3.line() // can also do areas, arcs, and other cool stuff
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        //.interpolate("linear"); // linear by default. Can do many kinds of interpolations, look them up
+    
+    let svgContainer5 = d3.select("body").append("svg")
+        .attr("width", 200)
+        .attr("height", 200)
+        .style("border", "2px solid black");
+    
+    let lineGraph = svgContainer5.append("path")
+        .attr("d", lineFunction(lineData))
+        .attr("stroke", "blue")
+        .attr("stroke-width", 2)
+        .attr("fill", "none");
+ </script>
+ </html>
