@@ -1,85 +1,98 @@
-<!-- https://www.codeseek.co/MichaelWStuart/d3-v4-heat-map-LxprYe#js -->
+<!-- Modified from: https://www.codeseek.co/MichaelWStuart/d3-v4-heat-map-LxprYe#js -->
 <!DOCTYPE html>
-<html >
-<head>
-  <meta charset="UTF-8">
-  <title>d3 v4 Heat Map</title>
-  <script src="https://d3js.org/d3.v4.min.js"></script>
-   
-   <style>
-    body {
-    margin: 0;
-    }
-    
-    #chart {
-    display: block;
-    margin: auto;
-    }
-    
-    #title {
-    font-size: 32px;
-    text-anchor: middle;
-    }
-    
-    #description {
-    font-size: 15px;
-    text-anchor: middle;
-    }
-    
-    .temperatures, .months { /*axes*/
-    font-size: 12px;
-    }
-    
-    #tooltip {
-    background-color: rgba(187, 187, 187, 0.7);
-    border-radius: 5px;
-    height: 38px;
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-    width: 110px;
-    text-align: center;
-    }
-   </style>
-   
-</head>
- 
-<body>
-  <svg id='chart'></svg>
-  <script>
-    "use strict";
-    const url = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/global-temperature.json',
-        months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-        colors = ['#2C7BB6', '#00A6CA', '#00CCBC', '#90EB9D', '#FFFF8C', '#F9D057', '#F29E2E', '#E76818', '#D7191C'],
-        margin = { top: 100, right: 20, bottom: 100, left: 60 },
-        width = 1000,
-        height = 400;
-    
-    let tooltip = d3.select('body')
-        .append('div')
-        .attr('id', 'tooltip');
-    
-    let xScale = d3.scaleTime().range([0, width]);
-    let yScale = d3.scaleLinear().range([height, 0]);
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>D3 Heat Map demo</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+      body{
+        margin: 0;
+      }
 
-    let chart = d3.select("#chart")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append('g').attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
-    
-      //title
-    chart.append("text")
-      .attr("transform", "translate(" + width/2 + ", " + -45 + ")")
-      .attr('id', 'title')
-      .text('Monthly Global Land Surface Temperatures: 1753-2015');
-      //description
-    chart.append("text")
-      .attr("transform", "translate(" + width/2 + ", " + -20 + ")")
-      .attr('id', 'description')
-      .text('Temperatures are relative to the Jan 1951 - Dec 1980 estimated average global temperature: 8.66°C ± 0.07');
-    
-    // y-axis
-    chart.append("g")
+      #chart{
+       display: block;
+       margin: auto;
+      }
+
+      .title-box{
+        text-align: center;
+        margin: auto;
+      }
+      .title-box h2{
+        font-weight: normal;
+        font-size: 1em;
+      }
+
+      .temperatures, .months { /* axes */
+        font-size: 12px;
+      }
+
+      #tooltip{
+          background-color: rgba(187, 187, 187, 0.7);
+          border-radius: 5px;
+          height: 38px;
+          opacity: 0;
+          pointer-events: none;
+          position: absolute;
+          width: 110px;
+          text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="title-box">
+      <h1>Monthly Global Land Surface Temperatures: 1753-2015</h1>
+      <h2>Temperatures are relative to the Jan 1951 - Dec 1980 estimated average global temperature: 8.66°C ± 0.07</h2>
+    </div>
+    <svg id="chart"></svg>
+    <script>
+    const url = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/global-temperature.json',
+        monthsPerYear = 12,
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        colors = ['#2C7BB6', '#00A6CA', '#00CCBC', '#90EB9D', '#FFFF8C', '#F9D057', '#F29E2E', '#E76818', '#D7191C'],
+        margin = { top: 0, right: 40, bottom: 100, left: 60 },
+        tooltipHeight = 40,
+        tooltipWidth = 110;
+    const tooltip = d3.select('body').append('div').attr('id', 'tooltip');
+    let resizeTimer;
+
+    renderChart();
+    listenForResize();
+
+    // 0.25 second debounce before resizing
+    function listenForResize() {
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        setTimeout(() => {
+          clearChart();
+          renderChart();
+        }, 250);
+      });
+    }
+
+    function clearChart(){
+      const myNode = document.getElementById("chart");
+      while (myNode.firstChild) {
+        myNode.removeChild(myNode.firstChild);
+      }
+    }
+
+    function renderChart(){
+      clearChart();
+      let width = Math.max(400, window.innerWidth*0.9);
+      let height = Math.max(300, window.innerHeight/2);
+
+      const xScale = d3.scaleTime().range([0, width]);
+      const yScale = d3.scaleLinear().range([height, 0]);
+
+      const chart = d3.select('#chart')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g').attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+      // y-axis
+      chart.append("g")
       .selectAll("text")
       .data(months)
       .enter()
@@ -89,96 +102,104 @@
         return '' + -10;
       })
       .attr("y", function(d, idx){
-        return '' + (20 + idx * 33.4);
+        return '' + (20 + idx * height/monthsPerYear);
       })
-      .attr('text-anchor', 'end') //alter
+      .attr('text-anchor', 'end')
       .text(function (d) {
         return '' + d;
       });
 
-      d3.json(url, function (data) {
-        function date(year) {
+      d3.json(url).then((data) => {
+        function date(year){
           return new Date(Date.parse(year));
-        };
-        xScale.domain([date(data.monthlyVariance[0].year), date(data.monthlyVariance[data.monthlyVariance.length-1].year)]);
-        yScale.domain([0, 12]);
+        }
 
-        // x-axis
-        let xTicks = xScale.ticks().concat(new Date(data.monthlyVariance[data.monthlyVariance.length - 1].year, 0)); //makes sure the last year has a tick
-        chart.append("g")
-          .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(xScale).tickValues(xTicks));
-        
-        // create color scale from variance
-        let colorScale = d3.scaleQuantize()
-          .domain(d3.extent(data.monthlyVariance, function(d){
-            return d.variance;
-          }))
-          .range(colors);
-        
-        // add all bars, 12 per year, with mouseover text
-        chart.selectAll('.bar')
-        .data(data.monthlyVariance)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('x', function (d) {
-          return xScale(new Date(d.year, 0));
-        })
-        .attr('width', (width / data.monthlyVariance.length + 40) / 12)
-        .attr('y', function (d) {
-          return yScale(d.month);
-        })
-        .attr('height', height / 12).attr('fill', function (d) {
-          return colorScale(d.variance);
-        }).on('mouseover', function (d) {
-          tooltip.transition()
-            .duration(100)
-            .style('opacity', .9);
-          tooltip.text(months[months.length - d.month] + ' ' + d.year + ' ' + d.variance.toFixed(3) + '°C')
-            .style('left', d3.event.pageX - 55 + 'px')
-            .style('top', d3.event.pageY - 40 + 'px');
-        }).on('mouseout', function () {
-          tooltip.transition()
-            .duration(400)
-            .style('opacity', 0);
-        });
+      // variance: difference from the baseline
+
+      xScale.domain([date(data.monthlyVariance[0].year), date(data.monthlyVariance[data.monthlyVariance.length-1].year)]);
+      yScale.domain([0, monthsPerYear]);
+
+      // x-axis
+      let xTicks = xScale.ticks().concat(new Date(data.monthlyVariance[data.monthlyVariance.length - 1].year, 0)); //makes sure the last year has a tick
+      chart.append('g')
+      .attr("transform", `translate(0, ${height})`)
+      .call(d3.axisBottom(xScale).tickValues(xTicks));
+
+      // create color scale from variance
+      const colorScale = d3.scaleQuantize()
+        .domain(d3.extent(data.monthlyVariance, (d) => {
+          return d.variance;
+        }))
+        .range(colors);
+
+      // add all bars, 12 per year, with mouseover text
+      chart.selectAll('.bar')
+      .data(data.monthlyVariance)
+      .enter()
+      .append('rect')
+      .attr('class', 'bar')
+      .attr('x', (d) => {
+        return xScale(new Date(d.year, 0));
+      })
+      .attr('width', 1+(data.monthlyVariance.length / width))
+      .attr('y', (d) => {
+        return yScale(d.month);
+      })
+      .attr('height', height / monthsPerYear)
+      .attr('fill', (d) => {
+        return colorScale(d.variance);
+      })
+      .on('mouseover', (d) => {
+        tooltip.transition()
+          .duration(100)
+          .style('opacity', .9);
+        tooltip.text(`${months[months.length - d.month]} ${d.year} ${d.variance.toFixed(3)} °C`)
+          .style('left', d3.event.pageX - tooltipWidth/2 + 'px')
+          .style('top', d3.event.pageY - tooltipHeight + 'px');
+      }).on('mouseout', () => {
+        tooltip.transition()
+          .duration(400)
+          .style('opacity', 0);
       });
 
-      // create a gradient scale for the visualization
+      });
+
       const gradientScale = d3.scaleLinear().range(colors);
-      const linearGradient = chart.append('linearGradient')
-        .attr('id', 'linear-gradient');
+
+      const linearGradient = chart.append('linearGradient').attr('id', 'linear-gradient');
+
       linearGradient.selectAll('stop')
         .data(gradientScale.range())
         .enter()
         .append('stop')
-          .attr('offset', function(d, i){
-            return i / (gradientScale.range().length-1);
-          })
-          .attr('stop-color', function(d){
-            return d;
+        .attr('offset', (d, i) => {
+          return i / (gradientScale.range().length - 1);
+        })
+        .attr('stop-color', (d) => {
+          return d;
+        });
+
+      const legendHeight = 20;
+      const legendWidth = 300;
+      chart.append('rect')
+        .attr('width', legendWidth).attr('height', legendHeight)
+        .style('fill', 'url(#linear-gradient)')
+        .attr('transform', `translate(${width/2 - 150}, ${height+40})`);
+
+      chart.append('g')
+        .selectAll('text')
+        .data(Array.from(Array(monthsPerYear+1).keys()))
+        .enter()
+        .append('text')
+        .attr('class', 'temperatures')
+        .attr('x', (d) => {
+          return '' + ((width/2-148) + Math.ceil(legendWidth / (monthsPerYear+1)) * d);
+        })
+        .attr('y', `${height + 70}`)
+          .text((d) => {
+            return '' + (d - 6);
           });
-        
-        chart.append('rect')
-          .attr('width', 300)
-          .attr('height', 20)
-          .style('fill', 'url(#linear-gradient)')
-          .attr('transform', 'translate(' + (height/2 - 150) + ', ' + width+40 + ')');
-        
-        chart.append('g')
-          .selectAll('text')
-          .data(Array.from(Array(13).keys()))
-          .enter()
-          .append('text')
-            .attr('class', 'temperatures')
-            .attr('x', function (d) {
-              return '' + ((height/2 - 150) + Math.ceil(300 / 13) * d);
-            })
-            .attr('y', '' + width + 70)
-            .text(function (d) {
-              return '' + (d - 6);
-            });
-  </script>
-</body>
+    }
+    </script>
+  </body>
 </html>
